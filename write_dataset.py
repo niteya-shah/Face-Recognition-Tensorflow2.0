@@ -28,11 +28,12 @@ class generate_image:
         right = np.clip(boundary.right(),0,np.Inf).astype(np.int16)
         return image[top:bottom,left:right]
 
-    def __init__(self, original_path, new_path, required_size = 96):
+    def __init__(self, original_path, new_path, required_size = 96, as_npy = False):
         self.original_path = Path(original_path)
         self.new_path = Path(new_path)
         self.required_size = required_size
         self.detector = dlib.get_frontal_face_detector()
+        self.as_npy = as_npy
 
     def get_folder_list(self):
         self.file_dir = [x for x in self.original_path.iterdir() if x.is_dir()]
@@ -52,18 +53,26 @@ class generate_image:
         pool.map(self.create_dataset, self.file_dir)
 
     def generate_new_images(self, load_path, save_path):
-        for images in list(load_path.glob('*.jpg')):
-            modified_image = self.pre_process(imageio.imread(images))
-            if modified_image is not None:
-                imageio.imsave(save_path/images.parts[-1], (255 * modified_image).astype(np.uint8))
-                pass
+        if self.as_npy:
+            temp = list()
+            for images in list(load_path.glob('*.jpg')):
+                modified_image = self.pre_process(imageio.imread(images))
+                if modified_image is not None:
+                    temp.append((255 * modified_image).astype(np.uint8))
+            np.save(path_save, np.array(temp))
+        else:
+            for images in list(load_path.glob('*.jpg')):
+                modified_image = self.pre_process(imageio.imread(images))
+                if modified_image is not None:
+                    imageio.imsave(save_path/images.parts[-1], (255 * modified_image).astype(np.uint8))
+                    pass
 
-gen = generate_image("/D/work/ML/Faces/VGGFace2/vggface2_train/train", "/D/work/ML/Faces/VGGFace2/vggface2_train_preprocessed/", 96)
 
-gen.generate()
-# img = imageio.imread(list(gen.file_dir[0].glob('*.jpg'))[0])
-#
-# boundary = gen.detector(img, 2)
-#
-# image = gen.pre_process(img)
-# imshow((255 * image).astype(np.uint8))
+if __name__ == "__main__":
+    gen = generate_image("/D/work/ML/Faces/VGGFace2/vggface2_train/train", "/D/work/ML/Faces/VGGFace2/vggface2_train_preprocessed/", 96)
+    gen.generate()
+    img = imageio.imread(list(gen.file_dir[0].glob('*.jpg'))[0])
+    boundary = gen.detector(img, 2)
+    image = gen.pre_process(img)
+    imshow((255 * image).astype(np.uint8))
+    t_1 = np.load((path_save/file_dir[0].parts[-1]).with_suffix(".npy"))

@@ -1,71 +1,268 @@
 import tensorflow as tf
+import tensorflow_addons as tfa
 
-def convblock(model, filters, alpha, kernel=(3, 3), strides=(1, 1)):
-    channel_axis = 1
-    filters = int(filters * alpha)
-    model.add(tf.keras.layers.ZeroPadding2D(padding=((0, 1), (0, 1)), name='conv_sw_pad'))
-    model.add(tf.keras.layers.Conv2D(filters, kernel,
-                      padding='valid',
-                      use_bias=False,
-                      strides=strides,
-                      name='conv1'))
-    model.add(tf.keras.layers.BatchNormalization(axis=channel_axis, name='conv_sw_bn'))
-    model.add(tf.keras.layers.ReLU(6., name='conv1_relu'))
+class BaseModel(tf.keras.Model):
 
+	def __init__(self, values = 128):
+		super(BaseModel, self).__init__()
+		#conv block
+		channel_axis = 1
+		filters = 32
+		kernel = (3, 3)
+		self.zp_conv = tf.keras.layers.ZeroPadding2D(padding=((0, 1), (0, 1)))
+		self.conv2d_conv = tf.keras.layers.Conv2D(filters, kernel, padding='valid',use_bias=False,strides=(2,2))
+		self.bn_conv = tf.keras.layers.BatchNormalization(axis=channel_axis)
+		self.relu_conv =  tf.keras.layers.ReLU(6.)
 
-def depthwiseconvblock(model, pointwiseconvfilters, alpha, depth_multiplier=1, strides=(1, 1), block_name=1):
-    channel_axis = -1
-    pointwiseconvfilters = int(pointwiseconvfilters * alpha)
-    if strides != (1, 1):
-        model.add(tf.keras.layers.ZeroPadding2D(((0, 1), (0, 1)),
-                                 name='conv_dw_pad_%d' % block_name))
-    model.add(tf.keras.layers.DepthwiseConv2D((3, 3),
-                               padding='same' if strides == (1, 1) else 'valid',
-                               depth_multiplier=depth_multiplier,
-                               strides=strides,
-                               use_bias=False,
-                               name='conv_dw_%d' % block_name))
-    model.add(tf.keras.layers.BatchNormalization(
-        axis=channel_axis, name='conv_dw_%d_bn' % block_name))
-    model.add(tf.keras.layers.ReLU(6., name='conv_dw_%d_relu' % block_name))
+		depth_multiplier = 1
+		channel_axis = -1
+		#depthwise layer 1
+		pointwiseconvfilters = 16
+		strides = (1, 1)
+		self.dc2d_d1 = tf.keras.layers.DepthwiseConv2D((3, 3),
+								padding='same' if strides == (1, 1) else 'valid',
+								depth_multiplier=depth_multiplier,
+								strides=strides,
+								use_bias=False)
+		self.bn_d1 = tf.keras.layers.BatchNormalization(axis=channel_axis)
+		self.relu_d1  = tf.keras.layers.ReLU(6.)
 
-    model.add(tf.keras.layers.Conv2D(pointwiseconvfilters, (1, 1),
-                      padding='same',
-                      use_bias=False,
-                      strides=(1, 1),
-                      name='conv_pw_%d' % block_name))
-    model.add(tf.keras.layers.BatchNormalization(axis=channel_axis,
-                                  name='conv_pw_%d_bn' % block_name))
-    model.add(tf.keras.layers.ReLU(6., name='conv_pw_%d_relu' % block_name))
+		#depthwise layer 2
+		pointwiseconvfilters = 32
+		strides = (2, 2)
+		self.zp_d2 = tf.keras.layers.ZeroPadding2D(((0, 1), (0, 1)))
+		self.dc2d_d2 = tf.keras.layers.DepthwiseConv2D((3, 3),
+								   padding='same' if strides == (1, 1) else 'valid',
+								   depth_multiplier=depth_multiplier,
+								   strides=strides,
+								   use_bias=False)
+		self.bn_d2 = tf.keras.layers.BatchNormalization(axis=channel_axis)
+		self.relu_d2  = tf.keras.layers.ReLU(6.)
 
+		#depthwise layer 3
+		pointwiseconvfilters = 32
+		strides = (1, 1)
+		self.dc2d_d3 = tf.keras.layers.DepthwiseConv2D((3, 3),
+								   padding='same' if strides == (1, 1) else 'valid',
+								   depth_multiplier=depth_multiplier,
+								   strides=strides,
+								   use_bias=False)
+		self.bn_d3 = tf.keras.layers.BatchNormalization(axis=channel_axis)
+		self.relu_d3  = tf.keras.layers.ReLU(6.)
 
-def model_arch(alpha = 0.25, depth_multiplier = 1, dropout = 1e-3, values = 128):
-    model = tf.keras.Sequential()
-    convblock(model, 32, alpha, strides=(2, 2))
-    depthwiseconvblock(model, 64, alpha, depth_multiplier, block_name=1)
+		#depthwise layer 4
+		pointwiseconvfilters = 64
+		strides = (2, 2)
+		self.zp_d4 = tf.keras.layers.ZeroPadding2D(((0, 1), (0, 1)))
+		self.dc2d_d4 = tf.keras.layers.DepthwiseConv2D((3, 3),
+								   padding='same' if strides == (1, 1) else 'valid',
+								   depth_multiplier=depth_multiplier,
+								   strides=strides,
+								   use_bias=False)
+		self.bn_d4 = tf.keras.layers.BatchNormalization(axis=channel_axis)
+		self.relu_d4  = tf.keras.layers.ReLU(6.)
 
-    depthwiseconvblock(model, 128, alpha, depth_multiplier,strides=(2, 2), block_name=2)
-    depthwiseconvblock(model, 128, alpha, depth_multiplier, block_name=3)
+		#depthwise layer 5
+		pointwiseconvfilters = 64
+		strides = (1, 1)
+		self.dc2d_d5 = tf.keras.layers.DepthwiseConv2D((3, 3),
+								   padding='same' if strides == (1, 1) else 'valid',
+								   depth_multiplier=depth_multiplier,
+								   strides=strides,
+								   use_bias=False)
+		self.bn_d5 = tf.keras.layers.BatchNormalization(axis=channel_axis)
+		self.relu_d5  = tf.keras.layers.ReLU(6.)
 
-    depthwiseconvblock(model, 256, alpha, depth_multiplier, strides=(2, 2), block_name=4)
-    depthwiseconvblock(model, 256, alpha, depth_multiplier, block_name=5)
+		#depthwise layer 6
+		pointwiseconvfilters = 128
+		strides = (2, 2)
+		self.zp_d6 = tf.keras.layers.ZeroPadding2D(((0, 1), (0, 1)))
+		self.dc2d_d6 = tf.keras.layers.DepthwiseConv2D((3, 3),
+								   padding='same' if strides == (1, 1) else 'valid',
+								   depth_multiplier=depth_multiplier,
+								   strides=strides,
+								   use_bias=False)
+		self.bn_d6 = tf.keras.layers.BatchNormalization(axis=channel_axis)
+		self.relu_d6  = tf.keras.layers.ReLU(6.)
 
-    depthwiseconvblock(model, 512, alpha, depth_multiplier,strides=(2, 2), block_name=6)
-    depthwiseconvblock(model, 512, alpha, depth_multiplier, block_name=7)
-    depthwiseconvblock(model, 512, alpha, depth_multiplier, block_name=8)
-    depthwiseconvblock(model, 512, alpha, depth_multiplier, block_name=9)
-    depthwiseconvblock(model, 512, alpha, depth_multiplier, block_name=10)
-    depthwiseconvblock(model, 512, alpha, depth_multiplier, block_name=11)
+		#depthwise layer 7
+		pointwiseconvfilters = 128
+		strides = (1, 1)
+		self.dc2d_d7 = tf.keras.layers.DepthwiseConv2D((3, 3),
+								   padding='same' if strides == (1, 1) else 'valid',
+								   depth_multiplier=depth_multiplier,
+								   strides=strides,
+								   use_bias=False)
+		self.bn_d7 = tf.keras.layers.BatchNormalization(axis=channel_axis)
+		self.relu_d7  = tf.keras.layers.ReLU(6.)
 
-    depthwiseconvblock(model, 1024, alpha, depth_multiplier, strides=(2, 2), block_name=12)
-    depthwiseconvblock(model, 1024, alpha, depth_multiplier, block_name=13)
-    shape = (1, 1, int(1024 * alpha))
+		#depthwise layer 8
+		pointwiseconvfilters = 128
+		strides = (1, 1)
+		self.dc2d_d8 = tf.keras.layers.DepthwiseConv2D((3, 3),
+								   padding='same' if strides == (1, 1) else 'valid',
+								   depth_multiplier=depth_multiplier,
+								   strides=strides,
+								   use_bias=False)
+		self.bn_d8 = tf.keras.layers.BatchNormalization(axis=channel_axis)
+		self.relu_d8  = tf.keras.layers.ReLU(6.)
 
-    model.add(tf.keras.layers.GlobalAveragePooling2D())
-    model.add(tf.keras.layers.Reshape(shape, name='reshape_1'))
-    model.add(tf.keras.layers.Dropout(dropout, name='dropout'))
-    model.add(tf.keras.layers.Conv2D(values, (1, 1), padding='same', name='conv_preds'))
-    model.add(tf.keras.layers.Reshape((values,), name='reshape_2'))
-    model.add(tf.keras.layers.Activation('softmax', name='act_softmax'))
+		#depthwise layer 9
+		pointwiseconvfilters = 128
+		strides = (1, 1)
+		self.dc2d_d9 = tf.keras.layers.DepthwiseConv2D((3, 3),
+								   padding='same' if strides == (1, 1) else 'valid',
+								   depth_multiplier=depth_multiplier,
+								   strides=strides,
+								   use_bias=False)
+		self.bn_d9 = tf.keras.layers.BatchNormalization(axis=channel_axis)
+		self.relu_d9  = tf.keras.layers.ReLU(6.)
 
-    return model
+		#depthwise layer 10
+		pointwiseconvfilters = 128
+		strides = (1, 1)
+		self.dc2d_d10 = tf.keras.layers.DepthwiseConv2D((3, 3),
+								   padding='same' if strides == (1, 1) else 'valid',
+								   depth_multiplier=depth_multiplier,
+								   strides=strides,
+								   use_bias=False)
+		self.bn_d10 = tf.keras.layers.BatchNormalization(axis=channel_axis)
+		self.relu_d10  = tf.keras.layers.ReLU(6.)
+
+		#depthwise layer 11
+		pointwiseconvfilters = 128
+		strides = (1, 1)
+		self.dc2d_d11 = tf.keras.layers.DepthwiseConv2D((3, 3),
+								   padding='same' if strides == (1, 1) else 'valid',
+								   depth_multiplier=depth_multiplier,
+								   strides=strides,
+								   use_bias=False)
+		self.bn_d11 = tf.keras.layers.BatchNormalization(axis=channel_axis)
+		self.relu_d11  = tf.keras.layers.ReLU(6.)
+
+		#depthwise layer 12
+		pointwiseconvfilters = 256
+		strides = (2, 2)
+		self.zp_d12 = tf.keras.layers.ZeroPadding2D(((0, 1), (0, 1)))
+		self.dc2d_d12 = tf.keras.layers.DepthwiseConv2D((3, 3),
+								   padding='same' if strides == (1, 1) else 'valid',
+								   depth_multiplier=depth_multiplier,
+								   strides=strides,
+								   use_bias=False)
+		self.bn_d12 = tf.keras.layers.BatchNormalization(axis=channel_axis)
+		self.relu_d12  = tf.keras.layers.ReLU(6.)
+
+		#depthwise layer 13
+		pointwiseconvfilters = 256
+		strides = (1, 1)
+		self.dc2d_d13 = tf.keras.layers.DepthwiseConv2D((3, 3),
+								   padding='same' if strides == (1, 1) else 'valid',
+								   depth_multiplier=depth_multiplier,
+								   strides=strides,
+								   use_bias=False)
+		self.bn_d13 = tf.keras.layers.BatchNormalization(axis=channel_axis)
+		self.relu_d13  = tf.keras.layers.ReLU(6.)
+
+		#final block
+		shape = (1, 1, 72)
+
+		self.glavgpool2d_f = tf.keras.layers.GlobalAveragePooling2D()
+		self.res1_f = tf.keras.layers.Reshape(shape)
+		self.den_128 = tf.keras.layers.Dense(128)
+		self.drp_f = tf.keras.layers.Dropout(1e-3)
+		self.conv2d_f = tf.keras.layers.Conv2D(values, (1, 1), padding='same')
+		self.res2_f = tf.keras.layers.Reshape((values,))
+		self.sft_f = tf.keras.layers.Activation('softmax', dtype='float32')
+		self.norm_f = tf.keras.layers.Lambda(lambda x:tf.math.l2_normalize(tf.cast(x,dtype='float32'), axis = 1))
+		self.flat_f = tf.keras.layers.Flatten()
+
+	def call(self, input):
+		#conv
+		model = self.zp_conv(input)
+		model = self.conv2d_conv(model)
+		model = self.bn_conv(model)
+		model = self.relu_conv(model)
+
+		#dp 1
+		model = self.dc2d_d1(model)
+		model = self.bn_d1(model)
+		model = self.relu_d1(model)
+
+		#dp 2
+		model = self.zp_d2(model)
+		model = self.dc2d_d2(model)
+		model = self.bn_d2(model)
+		model = self.relu_d2(model)
+
+		#dp 3
+		model = self.dc2d_d3(model)
+		model = self.bn_d3(model)
+		model = self.relu_d3(model)
+
+		#dp 4
+		model = self.zp_d4(model)
+		model = self.dc2d_d4(model)
+		model = self.bn_d4(model)
+		model = self.relu_d4(model)
+
+		#dp 5
+		model = self.dc2d_d5(model)
+		model = self.bn_d5(model)
+		model = self.relu_d5(model)
+
+		#dp 6
+		model = self.zp_d6(model)
+		model = self.dc2d_d6(model)
+		model = self.bn_d6(model)
+		model = self.relu_d6(model)
+
+		#dp 7
+		model = self.dc2d_d7(model)
+		model = self.bn_d7(model)
+		model = self.relu_d7(model)
+
+		#dp 8
+		model = self.dc2d_d8(model)
+		model = self.bn_d8(model)
+		model = self.relu_d8(model)
+
+		#dp 9
+		model = self.dc2d_d9(model)
+		model = self.bn_d9(model)
+		model = self.relu_d9(model)
+
+		#dp 10
+		model = self.dc2d_d10(model)
+		model = self.bn_d10(model)
+		model = self.relu_d10(model)
+
+		#dp 11
+		model = self.dc2d_d11(model)
+		model = self.bn_d11(model)
+		model = self.relu_d11(model)
+
+		#dp 12
+		model = self.zp_d12(model)
+		model = self.dc2d_d12(model)
+		model = self.bn_d12(model)
+		model = self.relu_d12(model)
+
+		#dp 13
+		model = self.dc2d_d13(model)
+		model = self.bn_d13(model)
+		model = self.relu_d13(model)
+
+		model = self.glavgpool2d_f(model)
+		#model = self.res1_f(model)
+		model = self.den_128(model)
+		# model = self.drp_f(model)
+		# model = self.conv2d_f(model)
+		return self.norm_f(model)
+
+if "__name__"=="__main__":
+	model = BaseModel()
+	images = tf.keras.layers.Input(name ="Input", shape = [96, 96, 3], dtype = tf.float32)
+	embeddings = model.call(images)
+	siamese_model = tf.keras.Model(inputs = images, outputs = embeddings)
+	siamese_model.compile(optimizer = tf.keras.optimizers.Adam(0.001), loss = tfa.losses.TripletHardLoss(margin = 0.2))
+	siamese_model.summary()
