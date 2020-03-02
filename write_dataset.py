@@ -65,7 +65,6 @@ class generate_image:
                 modified_image = self.pre_process(imageio.imread(images))
                 if modified_image is not None:
                     imageio.imsave(save_path/images.parts[-1], (255 * modified_image).astype(np.uint8))
-                    pass
 
 
 if __name__ == "__main__":
