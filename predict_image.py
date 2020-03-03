@@ -1,7 +1,10 @@
-# import warnings
-# warnings.simplefilter('ignore')
-import tensorflow as tf
+import warnings
+warnings.simplefilter('ignore')
 import os
+os.environ['TF_CPP_MIN_LOG_LEVEL']='3'
+os.environ['AUTOGRAPH_VERBOSITY'] = '0'
+import tensorflow as tf
+tf.autograph.set_verbosity(0)
 import matplotlib.pyplot as plt
 from learning_strategy import online_model
 import imageio
@@ -11,6 +14,8 @@ from pathlib import Path
 import cv2
 from sklearn.neighbors import RadiusNeighborsClassifier
 import sklearn.metrics
+from scipy import interp
+import matplotlib.pyplot as plt
 
 model = online_model(shape = 96, use_trained = "Mobile")
 model.build(input_shape = [None,96,96,3])
@@ -34,6 +39,7 @@ for person in range(num_people):
         num_img.append(person)
 
 people = np.array(people)
+gc.collect()
 num_img = np.array(num_img)
 embeddings = model.predict(people)
 del people
@@ -42,5 +48,5 @@ neigh = RadiusNeighborsClassifier(radius = 0.025, n_jobs = 7)
 neigh.fit(embeddings, num_img)
 t = neigh.predict(embeddings)
 print("Accuracy is {}".format(sklearn.metrics.accuracy_score(t, num_img) * 100))
-print("confusion_matrix is {}".format(sklearn.metrics.confusion_matrix(t, num_img)))
-print(sklearn.metrics.classification_report(t, num_img))
+print("Precision is {}".format(sklearn.metrics.precision_score(t, num_img, average='weighted')))
+print("Recall is {}".format(sklearn.metrics.recall_score(t, num_img, average='macro')))

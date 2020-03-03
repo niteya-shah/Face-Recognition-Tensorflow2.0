@@ -14,3 +14,23 @@ class TripletLoss(tf.keras.losses.Loss):
     def __init__(self, margin = 0.9):
         super().__init__()
         self.margin = margin
+
+class MapLockLoss(tf.keras.losses.Loss):
+    """
+    For our custom loss we expect a 2D vector of equal dimensions, to keep complexity in check, the preferable shape is 16X16
+    """
+    def dist(self, x, y):
+        centric = (tf.nn.conv2d(tf.expand_dims(x, axis=3), self.ker, strides=[1,1,1,1], padding='SAME') - tf.nn.conv2d(tf.expand_dims(y, axis=3), self.ker, strides=[1,1,1,1], padding='SAME')) * 0.5 + x - y
+        return centric
+
+    def call(self, y_true, y_pred):
+        y_pred = tf.squeeze(y_pred)
+        anchor, pos, neg = tf.split(y_pred,num_or_size_splits = 3, axis = 1)
+        pos_dist   = tf.reduce_sum(input_tensor=self.dist(anchor, pos), axis=-1)
+        neg_dist   = tf.reduce_sum(input_tensor=self.dist(anchor, neg), axis=-1)
+        basic_loss = tf.add(tf.subtract(pos_dist, neg_dist), self.margin)
+        return tf.reduce_sum(input_tensor=tf.maximum(basic_loss, 0.0))
+
+    def __init__(self, margin = 0.3):
+        self.margin = margin
+        self.ker = tf.convert_to_tensor(np.ones((3,3,1,1)))
