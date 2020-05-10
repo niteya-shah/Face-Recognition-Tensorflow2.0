@@ -9,7 +9,7 @@ from multiprocessing import Pool
 
 
 class process_img(object):
-    def pre_process(self, image):
+    def pre_process(self, image, return_boundary=False):
         boundary = self.detector(image, 2)
         if(len(boundary) == 0):
             return None
@@ -17,6 +17,8 @@ class process_img(object):
             aligned = self.clip_image(image, boundary[0])
             resized = resize(
                 aligned, [self.required_size, self.required_size, 3])
+            if return_boundary:
+                return resized, boundary
             return resized
 
     def clip_image(self, image, boundary):

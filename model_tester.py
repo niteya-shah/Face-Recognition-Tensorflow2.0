@@ -1,10 +1,7 @@
-import cv2
-import socket
-import numpy as np
-import pickle
-from write_dataset import process_img
-from utils import take_photo, show_photo
-from fast_learner import NN_fl
+import numpy as np  # NOQA
+from write_dataset import process_img  # NOQA
+from utils import take_photo, show_photo  # NOQA
+from fast_learner import NN_fl  # NOQA
 
 proc = process_img(96)
 
