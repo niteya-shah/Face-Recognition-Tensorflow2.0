@@ -7,9 +7,7 @@ import dlib
 import os
 from multiprocessing import Pool
 
-
-class generate_image:
-
+class process_img(object):
     def pre_process(self, image):
         boundary = self.detector(image, 2)
         if(len(boundary) == 0):
@@ -27,12 +25,17 @@ class generate_image:
         right = np.clip(boundary.right(), 0, np.Inf).astype(np.int16)
         return image[top:bottom, left:right]
 
-    def __init__(self, original_path, new_path, required_size=96,
-                 as_npy=False):
-        self.original_path = Path(original_path)
-        self.new_path = Path(new_path)
+    def __init__(self, required_size):
         self.required_size = required_size
         self.detector = dlib.get_frontal_face_detector()
+
+class generate_image(process_img):
+
+    def __init__(self, original_path, new_path, required_size=96,
+                 as_npy=False):
+        super().__init__(required_size)
+        self.original_path = Path(original_path)
+        self.new_path = Path(new_path)
         self.as_npy = as_npy
 
     def get_folder_list(self):

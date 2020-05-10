@@ -29,20 +29,23 @@ method = "online"
 
 # The model is compiled and then fit on the dataset
 if method == "online":
-    siamese_model = offline_model(shape=96, optimizer=tf.keras.optimizers.Adam(
-        0.001),                             loss=MapLockLoss(margin=0.3))
-    dataset = image_generator_offline(path, K=512).return_val()
-    dataset = dataset.prefetch(AUTOTUNE)
-else:
     siamese_model = online_model(shape=96, use_trained="Mobile",
                                  optimizer=tf.keras.optimizers.Adam(0.01),
                                  loss=TripletSemiHardLoss(margin=0.2))
     dataset = image_generator_online(path, K=10, num_people=15).return_val()
     dataset = dataset.repeat(3).prefetch(AUTOTUNE)
+else:
+    siamese_model = offline_model(shape=96, optimizer=tf.keras.optimizers.Adam(
+        0.001),                             loss=MapLockLoss(margin=0.3))
+    dataset = image_generator_offline(path, K=512).return_val()
+    dataset = dataset.prefetch(AUTOTUNE)
 
-# siamese_model.load_weights("/D/work/ML/Faces/src/weights/siamese_weights_5.h5")
+try:
+    siamese_model.load_weights("/D/work/ML/Faces/src/weights/siamese_weights_5.h5")
+except Exception:
+    pass
 # We define our model which a Combination of Convulational layers followed by
 # an encoding dense layer and then Calulate the loss of the model.
-siamese_model.fit(dataset, epochs=60000, use_multiprocessing=True,
+siamese_model.fit(dataset, epochs=150, use_multiprocessing=True,
                   callbacks=[tensorboard_callback])
 # siamese_model.save_weights("/D/work/ML/Faces/src/weights/siamese_weights_6.h5")

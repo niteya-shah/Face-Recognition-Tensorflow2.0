@@ -26,16 +26,12 @@ class MapLockLoss(tf.keras.losses.Loss):
     # complexity in check, the preferable shape is 16X16
 
     def dist(self, x_pad, y_pad, x, y):
-        centric = (x_pad - y_pad) * 0.5 + x - y
+        centric = tf.square(x_pad - y_pad) * 0.5 + tf.square(x - y)
         return centric
 
     def call(self, y_true, y_pred):
         y_pred = tf.squeeze(y_pred)
         anchor, pos, neg = tf.split(y_pred, num_or_size_splits=3, axis=1)
-
-        anchor = tf.square(anchor)
-        pos = tf.square(pos)
-        neg = tf.square(neg)
 
         anchor_pad = tf.nn.conv2d(tf.expand_dims(tf.squeeze(
             anchor), axis=3), self.ker, strides=[1, 1, 1, 1], padding='SAME')
