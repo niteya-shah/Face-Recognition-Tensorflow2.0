@@ -69,5 +69,3 @@ class OfflineLearning(Config):
         self.batch_size = batch_size
         self.strategy = LearningStrategy.offline_learning
         super().__init__(*args, **kwargs)
-
-t = OnlineLearning(10, 12, "/home/touchdown/vggface2_train_preprocessed/", loss=tfa.losses.TripletHardLoss(0.4), pre_process=False, architecture=Architecture.mobile_net)

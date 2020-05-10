@@ -7,6 +7,7 @@ import dlib
 import os
 from multiprocessing import Pool
 
+
 class process_img(object):
     def pre_process(self, image):
         boundary = self.detector(image, 2)
@@ -28,6 +29,7 @@ class process_img(object):
     def __init__(self, required_size):
         self.required_size = required_size
         self.detector = dlib.get_frontal_face_detector()
+
 
 class generate_image(process_img):
 
