@@ -16,14 +16,16 @@ from sklearn.neighbors import RadiusNeighborsClassifier  # NOQA
 import sklearn.metrics  # NOQA
 import matplotlib.pyplot as plt  # NOQA
 import gc  # NOQA
-from fast_learner import NN_fl
+from fast_learner import NN_fl_train
 
 ## %%
 method = "NN_fl"
 if method=="NN_fl":
     NN_fl_path = "./weights/fast_learner_weights_1.h5"
-    w = NN_fl("./weights/siamese_weights_3.h5")
-    model = w._get_model("./weights/siamese_weights_3.h5", NN_fl_path)
+    w = NN_fl_train("/home/touchdown/vggface2_test_preprocessed",
+                        "./weights/siamese_weights_3.h5",
+                        "./weights/fast_learner_weights_1.h5")
+    model = w.fast_learner_model
     data = w._get_data(3000)
     x = np.swapaxes(data[0], 0, 1)
     prediction = model.predict([x[0], x[1]])
@@ -34,7 +36,7 @@ else:
     model.build(input_shape=[None, 96, 96, 3])
     status = model.load_weights("./weights/siamese_weights_3.h5")
 
-    path2 = "/home/touchdown/vggface2_train_preprocessed/"
+    path2 = "/home/touchdown/vggface2_test_preprocessed"
     path = Path(path2)
 
     gc.collect()
@@ -47,7 +49,7 @@ else:
     for person in range(num_people):
         for image in list(file_dir[person].glob('*.jpg'))[0:50]:
             people.append(cv2.cvtColor(cv2.imread(
-                image.as_posix()), cv2.COLOR_RGB2BGR))
+                image.as_posix()), cv2.COLOR_RGB2BGR)/255)
             num_img.append(person)
 
     people = np.array(people)
