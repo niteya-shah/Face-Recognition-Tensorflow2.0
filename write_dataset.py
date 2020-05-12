@@ -74,3 +74,8 @@ class generate_image(process_img):
                     imageio.imsave(
                         save_path/images.parts[-1],
                         (255 * modified_image).astype(np.uint8))
+if __name__=="__main__":
+    gen = generate_image("/D/work/ML/Faces/lfw-deepfunneled/",
+                         new_path="/home/touchdown/lfw-preprocessed")
+    gen.generate()
+    
