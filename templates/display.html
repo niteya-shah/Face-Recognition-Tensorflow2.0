@@ -1,0 +1,96 @@
+<p style="text-align: center;">Title Screen</p>
+<style>
+body {margin:0;}
+
+ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: #333;
+  position: fixed;
+  top: 0;
+  width: 100%;
+}
+
+li {
+  float: left;
+}
+
+li a {
+  display: block;
+  color: white;
+  text-align: center;
+  padding: 14px 16px;
+  text-decoration: none;
+}
+
+li a:hover:not(.active) {
+  background-color: #111;
+}
+
+.active {
+  background-color: #4CAF50;
+}
+</style>
+<link rel="stylesheet" href="https://unpkg.com/purecss@2.0.2/build/pure-min.css">
+<script language="javascript">
+   setInterval(function () {
+      update_values();
+   }, 3000);
+
+   function update_values() {
+      $SCRIPT_ROOT = {{ request.script_root | tojson | safe }};
+      $.getJSON($SCRIPT_ROOT + "/update_details",
+         function (data) {
+            $("#Name").text(data.name)
+            $("#reg_no").text(data.reg_id)
+            $("#scl").text(data.School)
+            $("#mb").text(data.Mobile_number)
+            $("#block").text(data.Block)
+            $('#img_path').attr('src', data.img_path)
+
+         });
+   }
+</script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<ul>
+   <li><a class="active" href="#home">Home</a></li>
+   <li><a href="/add_student">Add Student</a></li>
+   <li><a href="/view_student">View Students</a></li>
+ </ul>
+<div style="margin-left:600;text-align:center">
+   <div style="display: flex;flex-direction: row;">
+      <p><img src="{{ url_for('video_feed') }}" class="pure-img" style="margin-left: auto; margin-right: 30;" alt="Video" width="400"
+            height="400" /></p>
+      <div margin: 0 25px;>
+         <img src="" id="img_path" width="150" height="150" style="margin-right: 30;margin-bottom: 50;margin-top: 30" />
+         <table class="pure-table pure-table-bordered" style="border-color: black; width: 282px; height: 117px; margin-left: auto; margin-right: 50;"
+            border = 1 cellspacing="1" cellpadding="1">
+            <tbody>
+               <tr>
+                  <td style="width: 99px;">Name</td>
+                  <td style="width: 175px;" id="Name"> {{ text[0] }}</td>
+               </tr>
+               <tr>
+
+                  <td style="width: 99px;">Registration Number</td>
+                  <td style="width: 175px;" id="reg_no"> {{ text[1] }} </td>
+               </tr>
+               <tr>
+                  <td style="width: 99px;">School</td>
+                  <td style="width: 175px;" id="scl"> {{ text[2] }} </td>
+               </tr>
+               <tr>
+                  <td style="width: 99px;">Mobile Number</td>
+                  <td style="width: 175px;" id="mb"> {{ text[3] }} </td>
+               </tr>
+               <tr>
+                  <td style="width: 99px;">Block</td>
+                  <td style="width: 175px;" id="block"> {{ text[4] }} </td>
+               </tr>
+            </tbody>
+         </table>
+      </div>
+   </div>
+</div>
