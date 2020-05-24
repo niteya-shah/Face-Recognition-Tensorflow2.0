@@ -24,7 +24,7 @@ class Gen_frame(object):
         self.mycursor = mydb.cursor(buffered=True, dictionary=True)
         self.mydb = mydb
 
-    def gen_image(self):
+    def gen_video(self):
         while(True):
             # Capture frame-by-frame
             _, frame = self.cap.read()
@@ -38,8 +38,6 @@ class Gen_frame(object):
                                           (boundary[0].br_corner().x,
                                            boundary[0].br_corner().y),
                                           (255, 0, 0), thickness=2)
-
-                    print("\033[2K", end="\r")
                     images = self.file_path.glob("*.jpg")
                     for image in images:
                         img_p = cv2.cvtColor(
@@ -61,6 +59,16 @@ class Gen_frame(object):
                 data = cv2.imencode('.png', frame)[1].tobytes()
 
                 yield (b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + data + b'\r\n\r\n')
+
+    def gen_image(self):
+        while(True):
+            # Capture frame-by-frame
+            _, frame = self.cap.read()
+            if ((frame is not None) and
+               (int(time.time() - self.start_time) % self.frame_time == 0)):
+                self.found_img = self.img_gen.pre_process(frame, True)[0]
+
+            yield (b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + cv2.imencode('.png', frame)[1].tobytes() + b'\r\n\r\n')
 
     def show_video(self):
         while(True):

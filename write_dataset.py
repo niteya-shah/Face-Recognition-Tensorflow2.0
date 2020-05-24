@@ -9,6 +9,8 @@ from multiprocessing import Pool
 
 
 class process_img(object):
+    # Process an image, applying any transformations necessary including
+    # boundaries, clipping and resizing it
     def pre_process(self, image, return_boundary=False):
         boundary = self.detector(image, 2)
         if(len(boundary) == 0):
@@ -34,7 +36,7 @@ class process_img(object):
 
 
 class generate_image(process_img):
-
+    # Take a dataset and process it and save it in a new path.
     def __init__(self, original_path, new_path, required_size=96,
                  as_npy=False):
         super().__init__(required_size)
@@ -74,8 +76,8 @@ class generate_image(process_img):
                     imageio.imsave(
                         save_path/images.parts[-1],
                         (255 * modified_image).astype(np.uint8))
-if __name__=="__main__":
+if __name__ =="__main__":
     gen = generate_image("/D/work/ML/Faces/lfw-deepfunneled/",
                          new_path="/home/touchdown/lfw-preprocessed")
     gen.generate()
-    
+

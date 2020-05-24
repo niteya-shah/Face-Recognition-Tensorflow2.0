@@ -3,7 +3,7 @@ from flask import Flask, flash, redirect, render_template, request, session, abo
 import os
 import mysql.connector
 from frontend import Gen_frame
-
+import cv2
 
 mydb = mysql.connector.connect(
       host="localhost",
@@ -21,6 +21,10 @@ app.secret_key = os.urandom(12)
 
 IMG_path = os.path.join('static', 'images')
 
+empty_dict = {"name": "Not Found", "reg_id": "Not Found",
+              "School": "Not Found", "Mobile_number": "Not Found",
+              "Block": "Not Found", "img_path": ""}
+
 
 @app.route('/')
 def home():
@@ -35,8 +39,22 @@ def add_student():
 
 @app.route('/submit_details', methods=['POST'])
 def submit_details():
-    print(request.form)
-    return render_template('/display')
+    if hasattr(image_gen, 'found_img'):
+        name = request.form["Name"]
+        reg_no = request.form["reg_no"]
+        scl = request.form["scl"]
+        mb = request.form["mb"]
+        block = request.form["block"]
+        cv2.imwrite("static/images/" + name + ".jpg",
+                    255 * image_gen.found_img)
+        delattr(image_gen, 'found_img')
+        mycursor.execute("Insert into user values ('" + name + "','" +
+                         "static/images/" + name + ".jpg" + "','" + reg_no +
+                         "','" + scl + "','" + mb + "','" + block + "')")
+        return render_template('display.html', text=empty_dict)
+    else:
+        flash("No image found")
+        return render_template('add_students.html')
 
 
 @app.route('/login', methods=['POST'])
@@ -52,6 +70,12 @@ def do_admin_login():
 
 @app.route('/video_feed')
 def video_feed():
+    return Response(image_gen.gen_video(),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
+
+
+@app.route('/image_feed')
+def image_feed():
     return Response(image_gen.gen_image(),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
@@ -68,13 +92,12 @@ def details():
         text = dict(mycursor.next())
         if text is not None:
             return jsonify(text)
-    return {"name": "Not Found", "reg_id": "Not Found",
-            "School": "Not Found", "Mobile_number": "Not Found",
-            "Block": "Not Found", "img_path": ""}
+    return empty_dict
+
 
 @app.route("/display")
 def display(text=None):
-    return render_template('display.html', text=[1, 1, 1, 1, 1])
+    return render_template('display.html', text=empty_dict)
 
 
 if __name__ == "__main__":

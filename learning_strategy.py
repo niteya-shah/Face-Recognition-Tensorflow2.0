@@ -6,6 +6,7 @@ from losses import TripletLoss
 
 def offline_model(shape=96, loss=TripletLoss(),
                   optimizer=tf.keras.optimizers.Adam(0.0001)):
+    # Create a Tensorflow model, which uses an offline model.
     truth_dataset = tf.keras.layers.Input(name='truth_dataset',
                                           shape=[shape, shape, 3],
                                           dtype=tf.float32)
@@ -34,6 +35,7 @@ def offline_model(shape=96, loss=TripletLoss(),
 def online_model(shape=96, use_trained="Mobile",
                  optimizer=tf.keras.optimizers.Adam(0.0001),
                  loss=tfa.losses.TripletSemiHardLoss(margin=1.0)):
+    # Generate an online learning model.
     images = tf.keras.layers.Input(
         name="Input", shape=[shape, shape, 3], dtype=tf.float32)
 

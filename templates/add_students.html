@@ -45,33 +45,33 @@ li a:hover:not(.active) {
  </ul>
  <div style="margin-left:600;text-align:center">
     <div style="display: flex;flex-direction: row;">
-       <p><img src="{{ url_for('video_feed') }}" class="pure-img" style="margin-left: auto; margin-right: 30;" alt="Video" width="400"
+       <p><img src="{{ url_for('image_feed') }}" class="pure-img" style="margin-left: auto; margin-right: 30;" alt="Video" width="400"
              height="400" /></p>
        <div margin: 0 25px;>
           <form method="POST" action="/submit_details">
           <table class="pure-table pure-table-bordered" style="border-color: black; width: 282px; height: 117px; margin-top: 100; margin-left: auto; margin-right: 50;"
-             border = 1 cellspacing="1" cellpadding="1">
+             border="1" cellspacing="1" cellpadding="1">
              <tbody>
                 <tr>
                    <td style="width: 99px;">Name</td>
-                   <td style="width: 175px;" ><input id="Name"/></td>
+                   <td style="width: 175px;" ><input name="Name" id="Name"/></td>
                 </tr>
                 <tr>
  
                    <td style="width: 99px;">Registration Number</td>
-                   <td style="width: 175px;" ><input id="reg_no"/></td>
+                   <td style="width: 175px;" ><input name="reg_no" id="reg_no"/></td>
                 </tr>
                 <tr>
                    <td style="width: 99px;">School</td>
-                   <td style="width: 175px;" > <input id="scl"/></td>
+                   <td style="width: 175px;" > <input name="scl" id="scl"/></td>
                 </tr>
                 <tr>
                    <td style="width: 99px;">Mobile Number</td>
-                   <td style="width: 175px;" > <input id="mb"/></td>
+                   <td style="width: 175px;" > <input name="mb" id="mb"/></td>
                 </tr>
                 <tr>
                    <td style="width: 99px;">Block</td>
-                   <td style="width: 175px;"><input id="block"/> </td>
+                   <td style="width: 175px;"><input name="block" id="block"/> </td>
                 </tr>
              </tbody>
           </table>

@@ -3,7 +3,7 @@ import tensorflow_addons as tfa
 
 
 class BaseModel(tf.keras.Model):
-
+    # The Mobile Net Architecture.
     def __init__(self, values=128):
         super(BaseModel, self).__init__()
         # conv block

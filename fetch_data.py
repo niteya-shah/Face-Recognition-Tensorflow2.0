@@ -6,6 +6,7 @@ import tensorflow as tf
 
 
 class image_generator_offline:
+    # Generate 3 images per training shot.
     def gen_image(self):
         positive = random.randint(0, len(self.file_dir) - 1)
         negative = random.randint(0, len(self.file_dir) - 1)
@@ -42,6 +43,7 @@ class image_generator_offline:
 
 
 class image_generator_online:
+    # Generate images according online learning strategy.
     def gen_image(self):
         image_list = np.zeros(
             [self.num_people * self.K, self.shape, self.shape, 3])
