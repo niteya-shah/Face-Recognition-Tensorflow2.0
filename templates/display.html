@@ -35,13 +35,53 @@ li a:hover:not(.active) {
 </style>
 <link rel="stylesheet" href="https://unpkg.com/purecss@2.0.2/build/pure-min.css">
 <script language="javascript">
+   var webcamStream;
+   var cameraStarted = false;
+
+         function startWebcam() {
+         navigator.mediaDevices.getUserMedia(
+         {
+            video: true,
+            audio: false
+         }).then(
+            function(webcamStream) {
+               cameraStarted = true
+               track = webcamStream.getVideoTracks()[0];
+               img_c = new ImageCapture(track);
+
+               }).catch(
+               // errorCallback
+                  function(err) {
+                     console.log("The following error occured: " + err);
+                  })
+         } 
+
+      async function getdatURL(blob)
+      {
+         return new Promise(async function(resolve, reject){
+            let reader = new FileReader();
+            reader.onerror = reject;
+            reader.onloadend = () => resolve(reader.result);
+            reader.readAsDataURL(blob);
+         })
+      }
+
+      async function snapshot() {
+         blob = await img_c.takePhoto();
+         return await getdatURL(blob);
+      }
+
    setInterval(function () {
       update_values();
    }, 3000);
 
-   function update_values() {
+   async function update_values() {
+      let result = await snapshot();
+      console.log(result);
+      if(result != null){
       $SCRIPT_ROOT = {{ request.script_root | tojson | safe }};
-      $.getJSON($SCRIPT_ROOT + "/update_details",
+      $.post($SCRIPT_ROOT + "/update_details",
+         {file: result}, 
          function (data) {
             $("#Name").text(data.name)
             $("#reg_no").text(data.reg_id)
@@ -50,8 +90,10 @@ li a:hover:not(.active) {
             $("#block").text(data.Block)
             $('#img_path').attr('src', data.img_path)
 
-         });
+         }, 'json');
+      }
    }
+   startWebcam();
 </script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
 <ul>
@@ -61,8 +103,7 @@ li a:hover:not(.active) {
  </ul>
 <div style="margin-left:600;text-align:center">
    <div style="display: flex;flex-direction: row;">
-      <p><img src="{{ url_for('video_feed') }}" class="pure-img" style="margin-left: auto; margin-right: 30;" alt="Video" width="400"
-            height="400" /></p>
+
       <div margin: 0 25px;>
          <img src="" id="img_path" width="150" height="150" style="margin-right: 30;margin-bottom: 50;margin-top: 30" />
          <table class="pure-table pure-table-bordered" style="border-color: black; width: 282px; height: 117px; margin-left: auto; margin-right: 50;"

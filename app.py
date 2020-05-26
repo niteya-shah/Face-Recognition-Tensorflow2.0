@@ -14,7 +14,7 @@ mydb = mysql.connector.connect(
 current = []
 mycursor = mydb.cursor(buffered=True, dictionary=True)
 mydb.autocommit = True
-image_gen = Gen_frame(mydb)
+#image_gen = Gen_frame(mydb)
 
 app = Flask(__name__)
 app.secret_key = os.urandom(12)
@@ -68,20 +68,21 @@ def do_admin_login():
     return home()
 
 
-@app.route('/video_feed')
-def video_feed():
-    return Response(image_gen.gen_video(),
-                    mimetype='multipart/x-mixed-replace; boundary=frame')
+# @app.route('/video_feed')
+# def video_feed():
+#     return Response(image_gen.gen_video(),
+#                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
-@app.route('/image_feed')
-def image_feed():
-    return Response(image_gen.gen_image(),
-                    mimetype='multipart/x-mixed-replace; boundary=frame')
+# @app.route('/image_feed')
+# def image_feed():
+#     return Response(image_gen.gen_image(),
+#                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
-@app.route('/update_details')
+@app.route('/update_details', methods=['POST'])
 def details():
+    print(request.form['file'])
     mycursor.reset()
     mycursor.execute("Select * from current")
     t = mycursor.fetchone()
