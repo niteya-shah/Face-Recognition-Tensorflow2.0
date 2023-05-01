@@ -1,5 +1,5 @@
 dlib==19.19.0
-Flask==1.1.2
+Flask==2.3.2
 Flask-Compress==1.4.0
 graphviz==0.13.2
 imageio==2.6.1
